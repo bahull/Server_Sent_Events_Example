@@ -20,7 +20,7 @@ app.get('/requests', (req, res, next) => {
         res.status(500).send('You dont get in!!!!')
     }
 })
-
+ 
 const currentUsers = [];
 
 app.get('/event-stream', (req, res) => {
