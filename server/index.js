@@ -19,7 +19,7 @@ app.get('/requests', (req, res, next) => {
         console.log('sending error')
         res.status(500).send('You dont get in!!!!')
     }
-})
+}) 
  
 const currentUsers = [];
 
