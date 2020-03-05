@@ -3,17 +3,23 @@ const { json, urlencoded } = require('body-parser');
 const cors = require('cors');
 const PORT = 3000;
 
+const SSEConnectionManager = require('./eventStreamManagers/sseConnectionManager');
+
+let connectionManager = new SSEConnectionManager();
+
+
 app.use(json());
 app.use(cors());
 app.use(urlencoded({ extended: true }));
 
 app.get('/requests', (req, res, next) => {
     //Mimic fetching the right connection
-    const currentPerson = currentUsers.find(curr => curr.userID === 1)
+    const currentPerson = connectionManager.getConnection(1);
     //If connection exists right to the client that people are checking on them 
     //Else do nothing.
     if(currentPerson) {
-        currentPerson.response.write(`data: People are checking in on you!!\n\n`);
+        currentPerson.connection.write(`data: People are checking in on you!!\n\n`);
+        // connectionManager.removeConnection(1);
         res.status(200).send('You hit the right end point')
     } else {
         console.log('sending error')
@@ -21,32 +27,32 @@ app.get('/requests', (req, res, next) => {
     }
 }) 
  
-const currentUsers = [];
+// const currentUsers = [];
 
 app.get('/event-stream', (req, res) => {
     const { userID } = req.query;
 
-    //This header beings our server stream
+    //This header beings our server stream 
     res.writeHead(200, {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         'Connection': 'keep-alive',
     });
     res.write('\n');
-
+    connectionManager.addConnection(res, userID)
     //create a connection object to be accessed later when the client needs to be updated
-    const currentConnection = {
-        userID: Number(userID),
-        response: res
-    }
-    //make sure the client doesn't already exist in our array
-    if(!currentUsers.find(curr => curr.userID === currentConnection.userID)) {
-        currentUsers.push(currentConnection)
-    }
+    // const currentConnection = {
+    //     userID: Number(userID),
+    //     response: res
+    // }
+    // //make sure the client doesn't already exist in our array
+    // if(!currentUsers.find(curr => curr.userID === currentConnection.userID)) {
+    //     currentUsers.push(currentConnection)
+    // }
 
-    if(currentUsers.length > 0 ) {
-        console.log(`Connection sucesffuly made with ${currentUsers.length} connections`)
-    }
+    // if(currentUsers.length > 0 ) {
+    //     console.log(`Connection sucesffuly made with ${currentUsers.length} connections`)
+    // }
 
     //TODO: Still working on understanding this.
     res.flushHeaders()
